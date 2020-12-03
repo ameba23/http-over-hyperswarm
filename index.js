@@ -1,62 +1,29 @@
-const http = require('http')
-const hyperswarm = require('hyperswarm')
-const { pipeline } = require('stream')
-const net = require('net')
+#!/usr/bin/node
+const server = require('./server')
+const client = require('./client')
+const { createHash } = require('crypto')
 
-const topic = Buffer.from('35af4e91e4627f604877c647bddbba67d146fdddc1b2ebce5e9d07f5d6e2e4f4', 'hex')
+const topicString = process.argv[4]
+const topic = sha256(topicString)
+const port = process.argv[3]
 
-const swarm = hyperswarm()
+if (!['server', 'client'].includes(process.argv[2])) {
+  console.log(`Usage:
+  ${process.argv[1]} server <port> <swarm topic>
+    - receive http requests over hyperswarm, forward to a local http server running on given port.
+
+  ${process.argv[1]} client <port> <swarm topic>
+    - forward local http requests on given port over hyperswarm to remote server
+`)
+  process.exit(1)
+}
 
 if (process.argv[2] === 'server') {
-  const server = http.createServer((req, res) => {
-    res.writeHead(200, { 'Content-Type': 'text/plain' })
-    res.end('okay', process.argv[2])
-  })
-
-  swarm.on('connection', (connection) => {
-    console.log('swarm connection')
-    connection.on('data', (data) => {
-      const client = net.createConnection({ port: 3001 }, () => {
-        console.log('connected to server!')
-        client.write(data)
-      })
-      client.on('data', (data) => {
-        connection.write(data)
-        client.end()
-      })
-      client.on('end', () => {
-        console.log('disconnected from server')
-      })
-    })
-  })
-  server.listen(3001)
-  swarm.join(topic, { announce: true, lookup: false })
+  server(topic, port)
 } else { // the client
-  let openSwarmConnection
-  let openhttpConnection
-  const server = net.createServer((connection) => {
-    console.log('client connected')
-    openhttpConnection = connection
-    connection.on('end', () => {
-      console.log('client disconnected')
-    })
-    connection.on('data', (data) => {
-      console.log(data.toString())
-      if (openSwarmConnection) openSwarmConnection.write(data)
-    })
-  })
-  server.on('error', (err) => {
-    throw err
-  })
-  server.listen(3002, () => {
-    console.log('server bound')
-  })
-  swarm.on('connection', (connection) => {
-    console.log('connected...')
-    openSwarmConnection = connection
-    connection.on('data', (data) => {
-      if (openhttpConnection) openhttpConnection.write(data)
-    })
-  })
-  swarm.join(topic, { announce: false, lookup: true })
+  client(topic, port)
+}
+
+function sha256 (msg) {
+  return createHash('sha256').update(msg).digest()
 }
