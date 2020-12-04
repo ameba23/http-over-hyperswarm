@@ -9,13 +9,13 @@ Maybe a similar module already exists!? If you know of one, please make an issue
 
 On machine running an http server:
 
-`./index.js server <port> <swarm topic>`
+`./cli.js server <port> <swarm topic>`
 
 Receives http requests over hyperswarm, forward to a local http server running on given port.
 
 On another machine:
 
-`./index client <port> <swarm topic>`
+`./cli.js client <port> <swarm topic>`
 
 Forwards local http requests on given port over hyperswarm to remote server
 
