@@ -1,9 +1,15 @@
 
-Tunnel http requests and responses over [hyperswarm](https://github.com/hyperswarm/hyperswarm)
+Tunnel http connections over [hyperswarm](https://github.com/hyperswarm/hyperswarm)
 
-Status: experimental
+**Status:** experimental/WIP
 
 Maybe a similar module already exists!? If you know of one, please make an issue and give a link! 
+
+## Why?
+
+Maybe you are behind a NAT and want to make a http server on local host accessible over the internet.
+
+Similar to what is offered by services like [ngrok](https://ngrok.com/) and [burrow.io](https://burrow.io/) - but without the price plan.
 
 ## Usage:
 
@@ -26,7 +32,6 @@ then make a request to `http://localhost:<port>`
 `<swarm topic>` - can be any string (its hash is taken as the swarm topic) - so the more 'random', the more secure, up to 32 bytes of entropy
 
 ### Programmatically
-
 
 `const { server, client } = require('.')`
 
